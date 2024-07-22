@@ -8,7 +8,7 @@ def generate_access_token(user):
     # словарь access_token
     access_token_payload = {
         "user_id": user["_id"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, minutes=30),
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=0, minutes=10000),
         # "iat": datetime.datetime.utcnow(),
     }
     access_token = jwt.encode(
@@ -18,15 +18,15 @@ def generate_access_token(user):
 
 
 # функция добавления refresh_token
-def generate_refresh_token(user):
-    # словарь refresh_token
-    refresh_token_payload = {
-        "user_id": user["_id"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
-        "iat": datetime.datetime.utcnow(),
-    }
-    refresh_token = jwt.encode(
-        refresh_token_payload, settings.REFRESH_TOKEN_SECRET, algorithm="HS256"
-    )
+# def generate_refresh_token(user):
+#     # словарь refresh_token
+#     refresh_token_payload = {
+#         "user_id": user["_id"],
+#         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
+#         "iat": datetime.datetime.utcnow(),
+#     }
+#     refresh_token = jwt.encode(
+#         refresh_token_payload, settings.REFRESH_TOKEN_SECRET, algorithm="HS256"
+#     )
 
-    return refresh_token
+#     return refresh_token

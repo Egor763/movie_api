@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from .models import User, Token
+from .models import User, Token, Movie
+
+
+class MovieSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Movie
+        fields = ("_id", "name", "link")
 
 
 class UserSerializer(serializers.ModelSerializer):

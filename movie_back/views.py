@@ -2,10 +2,10 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User
+from .models import User, Movie
 
-from .serializer import UserSerializer, TokenSerializer
-from .tokens.create_tokens import generate_access_token, generate_refresh_token
+from .serializer import UserSerializer, TokenSerializer, MovieSerializer
+from .tokens.create_tokens import generate_access_token
 from rest_framework import exceptions
 from .tokens.auth import SafeJWTAuthentication
 
@@ -56,74 +56,84 @@ class RegistrationView(APIView):
             )
 
 
+class MovieViewSet(APIView):
+    def get(self, request, format=None):
+        cards = Movie.objects.all()
+        serializer_movie = MovieSerializer(cards, many=True).data
+
+        if cards is None:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Фильм не найден",
+                },
+                status=status.HTTP_200_OK,
+            )
+            # print("serializer_movie : ", serializer_movie)
+
+        else:
+            return Response(serializer_movie, status=status.HTTP_200_OK)
+
+
 class UserViewSet(APIView):
     def get(self, request, format=None):
-        # SafeJWTAuthentication.authenticate(self, request)
-        # user = request.user
+        SafeJWTAuthentication.authenticate(self, request)
+        user = request.user
 
-        # if user is None:
-        #     return Response(
-        #         {
-        #             "success": False,
-        #             "message": "Пользователь не найден",
-        #         },
-        #         status=status.HTTP_200_OK,
-        #     )
+        if user is None:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Пользователь не найден",
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        # else:
-        #     del user["password"]
-        #     return Response(user, status=status.HTTP_200_OK)
-        return Response(
-            {
-                "success": False,
-                "message": "Пользователь не найден",
-            },
-            status=status.HTTP_200_OK,
-        )
+        else:
+            del user["password"]
+            return Response(user, status=status.HTTP_200_OK)
 
 
-# class LoginView(APIView):
-#     def post(self, request, format=None):
-#         email = request.data["email"]
-#         password = request.data["password"]
-#         hashed_password = make_password(password=password, salt=SALT)
+class LoginView(APIView):
+    def post(self, request, format=None):
+        email = request.data["email"]
+        password = request.data["password"]
+        hashed_password = make_password(password=password, salt=SALT)
 
-#         try:
-#             user = User.objects.get(email=email)
+        try:
+            user = User.objects.get(email=email)
+            print(user)
+        except User.MultipleObjectsReturned:
+            raise exceptions.AuthenticationFailed(
+                "пользователь с таким email уже зарегистрирован"
+            )
 
-#         except User.MultipleObjectsReturned:
-#             raise exceptions.AuthenticationFailed(
-#                 "Пользователь с таким email уже существует"
-#             )
+        if user is None or user.password != hashed_password:
+            print("p")
+            return Response(
+                {
+                    "success": False,
+                    "message": "Нет такого пользователя",
+                },
+                status=status.HTTP_200_OK,
+            )
 
-#         if user is None or user.password != hashed_password:
-#             return Response(
-#                 {
-#                     "success": False,
-#                     "message": "Нет такого пользователя",
-#                 },
-#                 status=status.HTTP_200_OK,
-#             )
+        else:
+            serializer_user = UserSerializer(user).data
+            print("serializer_user: ", serializer_user)
+            del serializer_user["password"]
+            access_token = generate_access_token(serializer_user)
+            token_obj = {
+                "user_id": serializer_user["_id"],
+            }
+            serializer = TokenSerializer(data=token_obj)
 
-#         else:
-#             serializer_user = UserSerializer(user, many=False).data
-#             del serializer_user["password"]
-#             access_token = generate_access_token(serializer_user)
-#             refresh_token = generate_refresh_token(serializer_user)
-#             token_obj = {
-#                 "token": refresh_token,
-#                 "serializer_user": serializer_user["_id"],
-#             }
-
-#             serializer = TokenSerializer(data=token_obj)
-
-#             if serializer.is_valid():
-#                 serializer.save()
-
-#             return Response(
-#                 {
-#                     "token": access_token,
-#                     "user": serializer_user,
-#                 },
-#                 status=status.HTTP_200_OK,
-#             )
+            if serializer.is_valid():
+                serializer.save()
+            return Response(
+                {
+                    "user": serializer_user,
+                    "token": access_token,
+                },
+                status=status.HTTP_200_OK,
+            )

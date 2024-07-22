@@ -90,7 +90,7 @@ WSGI_APPLICATION = "movie.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "mestodb",
+        "NAME": "movie",
         "USER": "postgres",
         "PASSWORD": "2412",
         "HOST": "localhost",
