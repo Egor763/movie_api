@@ -4,7 +4,7 @@ from .models import User, Movie, Token
 
 
 class MovieAdmin(admin.ModelAdmin):
-    list_display = ["_id", "name"]
+    list_display = ["id", "nameRu", "nameEn"]
 
 
 class UserAdmin(admin.ModelAdmin):

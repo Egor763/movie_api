@@ -58,8 +58,10 @@ class RegistrationView(APIView):
 
 class MovieViewSet(APIView):
     def get(self, request, format=None):
+        user = SafeJWTAuthentication.authenticate(self, request)
         cards = Movie.objects.all()
         serializer_movie = MovieSerializer(cards, many=True).data
+        print(serializer_movie)
 
         if cards is None:
             return Response(
@@ -73,6 +75,50 @@ class MovieViewSet(APIView):
 
         else:
             return Response(serializer_movie, status=status.HTTP_200_OK)
+
+    def post(self, request, format=None):
+        if request.method == "POST":
+            user = SafeJWTAuthentication.authenticate(self, request)[0]
+            image = request.data["image"]
+            name_ru = request.data["nameRU"]
+            duration = request.data["duration"]
+
+            print("user: ", user)
+
+            card_obj = {
+                "nameRU": name_ru,
+                "image": image,
+                "duration": duration,
+                "owner": user["_id"],
+            }
+
+            serializer = MovieSerializer(data=card_obj)
+            if serializer.is_valid():
+                serializer.save()
+                card = Movie.objects.get(owner=user["_id"])
+                serializer_card = MovieSerializer(card).data
+                return Response(serializer_card, status=status.HTTP_200_OK)
+
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Данные фильма невалидны",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+
+# class MovieDeleteView(APIView):
+#     def delete(self, request, format=None):
+#         cards = Movie.objects.all()
+#         if request.method == "DELETE":
+#             SafeJWTAuthentication.authenticate(self, request)
+
+#             if cards:
+#                 Movie.objects.filter(id=id).delete()
+#                 serializer = MovieSerializer(cards, many=True).data
+#                 return Response(serializer, status=status.HTTP_200_OK)
 
 
 class UserViewSet(APIView):
