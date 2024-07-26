@@ -66,7 +66,7 @@ class MovieViewSet(APIView):
             serializer = MovieSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                card = Movie.objects.get(owner=user["_id"])
+                card = Movie.objects.get(nameEN=request.data["nameEN"])
                 serializer_card = MovieSerializer(card).data
                 return Response(serializer_card, status=status.HTTP_200_OK)
 
@@ -80,15 +80,15 @@ class MovieViewSet(APIView):
                 )
 
 
-# class MovieDeleteView(APIView):
-#     def delete(self, request, id, format=None):
-#         cards = Movie.objects.all()
-#         if request.method == "DELETE":
-#             SafeJWTAuthentication.authenticate(self, request)
-#             if cards:
-#                 Movie.objects.filter(id=id).delete()
-#                 serializer = MovieSerializer(cards, many=True).data
-#                 return Response(serializer, status=status.HTTP_200_OK)
+class MovieDeleteView(APIView):
+    def delete(self, request, id, format=None):
+        cards = Movie.objects.all()
+        if request.method == "DELETE":
+            SafeJWTAuthentication.authenticate(self, request)
+            if cards:
+                Movie.objects.filter(_id=id).delete()
+                serializer = MovieSerializer(cards, many=True).data
+                return Response(serializer, status=status.HTTP_200_OK)
 
 
 class UserViewSet(APIView):
@@ -108,10 +108,36 @@ class UserViewSet(APIView):
             del user["password"]
             return Response(user, status=status.HTTP_200_OK)
 
+    def patch(self, request, format=None):
+        if request.method == "PATCH":
+            serializer, user = SafeJWTAuthentication.authenticate(self, request)
+            print(serializer)
+
+            name = request.data["name"]
+            email = request.data["email"]
+            print(email)
+
+            serializer["name"] = name
+            serializer["email"] = email
+
+            serializer_user = UserSerializer(user, data=serializer, partial=True)
+
+            if serializer_user.is_valid():
+                serializer_user.save()
+                return Response(serializer, status=status.HTTP_200_OK)
+
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "Данные пользователя не валидны",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
 
 class LoginView(APIView):
     def post(self, request, format=None):
-        SafeJWTAuthentication.authenticate(self, request)
         email = request.data["email"]
         password = request.data["password"]
         hashed_password = make_password(password=password, salt=SALT)

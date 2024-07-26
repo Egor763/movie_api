@@ -19,7 +19,6 @@ class SafeJWTAuthentication(BaseAuthentication):
     """
 
     def authenticate(self, request):
-        # User = get_user_model()
         # добавление header Authorization
         access_token = request.headers.get("Authorization")
 

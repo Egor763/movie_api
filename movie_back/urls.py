@@ -5,6 +5,7 @@ from .views import (
     RegistrationView,
     LoginView,
     MovieViewSet,
+    MovieDeleteView,
 )
 
 urlpatterns = [
@@ -12,5 +13,5 @@ urlpatterns = [
     path("signup", RegistrationView.as_view(), name="register"),
     path("signin", LoginView.as_view(), name="login"),
     path("movies", MovieViewSet.as_view(), name="movie"),
-    # path("movies/<uuid:id>", MovieDeleteView.as_view(), name="delete"),
+    path("movies/<uuid:id>", MovieDeleteView.as_view(), name="delete"),
 ]
